@@ -4,6 +4,11 @@
             [cljs.core.async :refer [>! chan close!]]
             [knex-cljs.core :refer [instance parse]]))
 
+(defn camel-case
+  "Converts kebab-case to camelCase"
+  [s]
+  (clojure.string/replace s #"-(\w)" (comp clojure.string/upper-case second)))
+
 (defn handler
   "Processes and writes query result to channel"
   [channel]
@@ -14,11 +19,6 @@
                 (assoc return :msg err)
                 (assoc return :content (parse results :keywordize-keys true))))
           (close! channel)))))
-
-(defn camel-case
-  "Converts kebab-case to camelCase"
-  [s]
-  (clojure.string/replace s #"-(\w)" (comp clojure.string/upper-case second)))
 
 (defn build-query
   [knex [k v]]
