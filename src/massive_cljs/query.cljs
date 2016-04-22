@@ -5,6 +5,7 @@
             [massive-cljs.core :refer [instance parse]]))
 
 (defn handler
+  "processes results of query (called from db-fn macroexpansion)"
   [channel]
   (fn [err results]
     (let [return {:error? (boolean err)}]
@@ -15,6 +16,7 @@
           (close! channel)))))
 
 (defn run
+  "Execute raw SQL"
   ([query]
    (run query []))
   ([query params]

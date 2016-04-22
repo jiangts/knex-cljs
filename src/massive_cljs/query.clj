@@ -7,6 +7,7 @@
   (clojure.string/replace s #"-(\w)" (comp clojure.string/upper-case second)))
 
 (defmacro db-fn
+  "heart of the wrapper"
   ([fn-name params]
    ;Hidden macro arguments &form &env must be passed explicitly
    (db-fn &form &env nil fn-name params nil))
@@ -17,8 +18,8 @@
       (-> ~(if instance
              instance
              '(deref massive-cljs.core/instance))
-          (~(if table (symbol (str ".-" (name table))) 'identity))
-          (~(symbol (str "." (camel-case (name fn-name))))
-            (cljs.core/clj->js ~params)
-            (handler channel#)))
+        (~(if table (symbol (str ".-" (name table))) 'identity))
+        (~(symbol (str "." (camel-case (name fn-name))))
+                  (cljs.core/clj->js ~params)
+                  (handler channel#)))
       channel#)))

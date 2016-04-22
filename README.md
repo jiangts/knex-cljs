@@ -2,6 +2,25 @@
 
 Clojurescript wrapper for the [Knex.js](http://knexjs.org/) SQL query builder.
 
+# Design
+- queries are pure data
+
+# Next
+
+### Transactions
+- make option for `run` that accepts a transaction object
+- then perhaps make `runBatch` or something, that automatically nests (? or
+    paralellizes?) a set of queries and calls `trx.commit` and `trx.rollback`
+    automatically for the user as appropriate.
+
+
+
+
+
+
+
+
+
 ## Overview
 
 FIXME: Write a paragraph about the library/project and highlight its goals.
