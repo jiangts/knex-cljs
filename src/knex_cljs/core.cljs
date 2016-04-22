@@ -1,5 +1,4 @@
-(ns knex-cljs.core
-  (:require [clojure.browser.repl :as repl]))
+(ns knex-cljs.core)
 
 ;; (defonce conn
 ;;   (repl/connect "http://localhost:9000/repl"))

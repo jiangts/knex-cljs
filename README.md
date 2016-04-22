@@ -1,56 +1,53 @@
 # knex-cljs
 
-FIXME: Write a one-line description of your library/project.
+Clojurescript wrapper for the [Knex.js](http://knexjs.org/) SQL query builder.
 
 ## Overview
 
 FIXME: Write a paragraph about the library/project and highlight its goals.
 
-## Setup
-
-Most of the following scripts require [rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap/) (on OS X installable via brew).
-
-Build your project once in dev mode with the following script and then open `index.html` in your browser.
-
-    ./scripts/build
-
-To auto build your project in dev mode:
-
-    ./scripts/watch
-
-To start an auto-building Node REPL:
-
-    ./scripts/repl
-
-To get source map support in the Node REPL:
-
-    lein npm install
-    
-To start a browser REPL:
-    
-1. Uncomment the following lines in src/knex_cljs/core.cljs:
-```clojure
-;; (defonce conn
-;;   (repl/connect "http://localhost:9000/repl"))
+## Usage
+### Require: 
+```Clojure
+(ns example.core
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [massive-cljs.core :as massive]
+            [massive-cljs.query :as query]
+            [cljs.core.async :refer [<!]]))
 ```
-2. Run `./scripts/brepl`
-3. Browse to `http://localhost:9000` (you should see `Hello world!` in the web console)
-4. (back to step 3) you should now see the REPL prompt: `cljs.user=>`
-5. You may now evaluate ClojureScript statements in the browser context.
-    
-For more info using the browser as a REPL environment, see
-[this](https://github.com/clojure/clojurescript/wiki/The-REPL-and-Evaluation-Environments#browser-as-evaluation-environment).
-    
-Clean project specific out:
 
-    lein clean
-     
-Build a single release artifact with the following script and then open `index_release.html` in your browser.
+### Connect:
+```Clojure
+(massive/init! "http://localhost:5432")
+```
 
-    ./scripts/release
+### Query:
+Query functions return a channel, which will receive a response of the format:
+```Clojure
+{:error? false :content [{:id 1 :name "Steve"} {:id 2 :name "Bill"}]}
+```
+If `:error?` is true, the content key will be absent and the error message will be present as `:msg`.
 
-## License
+In general `query/db-fn` mirrors the syntax of Massive's database functions:
+```Clojure
+(go
+  (let [response (<! (query/db-fn :users :find {:city "London"}))]
+    (if (:error? response)
+      (println (:msg response))
 
-Copyright © 2015 FIXME
+      (for [row (:content response)]
+        (println row)))))
+```
 
-Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
+```Clojure
+(query/db-fn :users :save {:email "new@example.com" :city "Paris"}) ;Insert a new user
+(query/db-fn :users :save {:id 4 :city "New York"}) ;Update an existing user by including the PK as a parameter
+(query/db-fn :users :find-one {:email "email@example.com"}) ;Returns a single result in :content, rather than a list
+(query/db-fn :my-special-function [arg1 arg2]) ;Looks for db/mySpecialFunction.sql in project root
+```
+
+Raw SQL can be executed directly using `query/run`, with a list of parameters as the optional second argument:
+```Clojure
+(query/run "SELECT * FROM users WHERE id > $1" [min-id])
+```
+
