@@ -20,10 +20,15 @@
                 (assoc return :content (parse results :keywordize-keys true))))
           (close! channel)))))
 
+;; use .call/.apply since a normal cljs function call emits
+;; f.call(null, <args>). Instead, we need
+;; f.call(knex, <args>)
 (defn build-query
   [knex [k v]]
   (let [f (aget knex (-> k name camel-case))]
-    (f (clj->js v))))
+    (if (vector? v)
+      (.apply f knex (cljs->js v))
+      (.call f knex (clj->js v)))))
 
 (defn run
   "Runs given query (a plain cljs map) on table"
@@ -34,5 +39,5 @@
          knex-query (reduce build-query (@instance table) query)]
      (cond-> knex-query
        trx (.transacting trx)
-       :always (.asCallback knex-query (handler channel)))
+       :always (.asCallback (handler channel)))
      channel)))
