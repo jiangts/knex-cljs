@@ -32,7 +32,7 @@
   ([table query trx]
    (let [channel (chan)
          knex-query (reduce build-query (@instance table) query)]
-     (when trx
-       (.transacting knex-query trx))
-     (.asCallback knex-query (handler channel))
+     (cond-> knex-query
+       trx (.transacting trx)
+       :always (.asCallback knex-query (handler channel)))
      channel)))
