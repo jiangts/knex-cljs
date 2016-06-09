@@ -1,7 +1,7 @@
 (ns knex-cljs.query
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [clojure.string]
-            [cljs.core.async :refer [>! chan close!]]
+            [cljs.core.async :refer [put! chan close!]]
             [knex-cljs.core :refer [instance parse]]))
 
 (defn camel-case
@@ -13,12 +13,11 @@
   "Processes and writes query result to channel"
   [channel]
   (fn [err results]
-    (let [return {:error? (boolean err)}]
-      (go (>! channel
-              (if err
-                (assoc return :msg err)
-                (assoc return :content (parse results :keywordize-keys true))))
-          (close! channel)))))
+    (put! channel
+          (if err
+            err
+            (parse results :keywordize-keys true)))
+    (close! channel)))
 
 ;; use .call/.apply since a normal cljs function call emits
 ;; f.call(null, <args>). Instead, we need
@@ -27,7 +26,7 @@
   [knex [k v]]
   (let [f (aget knex (-> k name camel-case))]
     (if (vector? v)
-      (.apply f knex (cljs->js v))
+      (.apply f knex (clj->js v))
       (.call f knex (clj->js v)))))
 
 (defn run
